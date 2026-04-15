@@ -550,7 +550,7 @@ window.onclick = (e) => {
 
 async function getAIRecommendations(prompt) {
     try {
-        const res = await fetch("https://page-turn-pearl.vercel.app/api/recommend", {
+        const res = await fetch("/api/recommend", {  // ✅ CHANGE HERE
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt })
@@ -559,9 +559,10 @@ async function getAIRecommendations(prompt) {
         if (!res.ok) throw new Error("Server response not OK");
 
         const data = await res.json();
-        console.log("AI Results Received:", data); // Check your browser console!
+        console.log("AI Results Received:", data);
         
         return Array.isArray(data) ? data : null;
+
     } catch (err) {
         console.error("AI Fetch Failed:", err);
         return null;
