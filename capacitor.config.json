@@ -1,5 +1,6 @@
 {
-  "appId": "com.karthick.bookapp",
+  "appId": "com.pageturn.app",
   "appName": "PageTurn",
-  "webDir": "www"
+  "webDir": "public",
+  "bundledWebRuntime": false
 }
