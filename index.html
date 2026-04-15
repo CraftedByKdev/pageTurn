@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PageTurn | Premium Book Discovery</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="hero-section">
+    <div class="header-logo">Page<span>Turn</span></div>
+
+    <div class="hero-content">
+        <h1 class="main-heading">
+            Discover your next<br>
+            <span class="gold-subtitle">great read</span>
+        </h1>
+
+        <p class="sub-heading"></p>
+
+        <!-- AI BOX -->
+        <div class="ai-box">
+            <input type="text" id="aiInput" placeholder="Tell me how you feel or what you need...">
+            <button id="aiBtn">♡</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div class="search-wrapper">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search by title, author...">
+                <button id="searchBtn">Search</button>
+            </div>
+        </div>
+
+        <!-- GENRES -->
+        <div class="category-tags">
+            <button class="tag" data-genre="fiction">Fiction</button>
+            <button class="tag" data-genre="mystery">Mystery</button>
+            <button class="tag" data-genre="fantasy">Fantasy</button>
+            <button class="tag" data-genre="romance">Romance</button>
+            <button class="tag" data-genre="history">History</button>
+            <button class="tag" data-genre="science">Science</button>
+
+            
+           
+        </div>
+
+        <!-- EXPLORE MORE -->
+       <div class="explore-more-wrapper">
+              <button id="exploreMoreBtn" class="explore-btn">Explore More</button>
+            
+            </div>
+         
+         
+        <div id="moreGenres" class="category-tags">
+            
+            <button class="tag extra-genre" data-genre="self-help">Self Help</button>
+            <button class="tag extra-genre" data-genre="technology">Technology</button>
+            <button class="tag extra-genre" data-genre="finance">Finance</button>
+            <button class="tag extra-genre" data-genre="psychology">Psychology</button>
+            <button class="tag extra-genre" data-genre="thriller">Thriller</button>
+            <button class="tag extra-genre" data-genre="horror">Horror</button>
+            <button class="tag extra-genre" data-genre="young-adult">Young Adult</button>
+            <button class="tag extra-genre" data-genre="crime">Crime</button>
+            <button class="tag extra-genre" data-genre="spirituality">Spirituality</button>
+            <button class="tag extra-genre" data-genre="adventure">Adventure</button>
+            <button class="tag extra-genre" data-genre="productivity">Productivity</button>
+        </div>
+
+        <!-- SPECIAL -->
+        
+
+    </div>
+</header>
+
+<main class="content-section">
+    <div class="content-container">
+        <p class="popular-right-now">TOP CURATED SELECTION</p>
+        <h2 class="section-heading" id="dynamicHeading">Top 20 Recommended Books</h2>
+        <div id="bookGrid" class="book-grid"></div>
+    </div>
+</main>
+
+<div id="bookModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div id="modalBody"></div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
