@@ -550,7 +550,7 @@ window.onclick = (e) => {
 
 async function getAIRecommendations(prompt) {
     try {
-        const res = await fetch("https://pageturn-production-749c.up.railway.app/recommend", {
+        const res = await fetch("https://localhost:3000/recommend", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt })
