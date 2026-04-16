@@ -21,11 +21,13 @@ export default async function handler(req, res) {
             {
               parts: [
                 {
-                  text: `Give 5 book recommendations for: ${prompt}.
-Return ONLY JSON like this:
+                  text: `Recommend exactly 10 popular non-academic books for: ${prompt}.
+Return ONLY a raw JSON array like:
 [
- { "title": "...", "author": "...", "desc": "..." }
-]`
+ { "title": "...", "author": "...", "desc": "...", "rating": 4.5, "reviews": 1200 }
+]
+NO explanation. NO markdown.`
+                 
                 }
               ]
             }
