@@ -1,6 +1,13 @@
 export default async function handler(req, res) {
 
   console.log("API KEY:", process.env.GEMINI_API_KEY);
+   res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
