@@ -18,7 +18,11 @@ export default async function handler(req, res) {
             {
               parts: [
                 {
-                  text: `Give 5 book recommendations for: ${prompt}. Return JSON array with title, author, desc.`
+                  text: `Give 5 book recommendations for: ${prompt}.
+Return ONLY JSON like this:
+[
+ { "title": "...", "author": "...", "desc": "..." }
+]`
                 }
               ]
             }
@@ -29,16 +33,17 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const text =
-      data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+    const rawText =
+      data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    // Extract JSON safely
-    const books = JSON.parse(text);
+    // 🔥 SAFE JSON extraction
+    const jsonMatch = rawText.match(/\[.*\]/s);
+    const books = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
-    res.status(200).json(books);
+    return res.status(200).json(books);
 
   } catch (err) {
-    console.error("ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("FULL ERROR:", err);
+    return res.status(500).json({ error: "Server crashed" });
   }
 }
