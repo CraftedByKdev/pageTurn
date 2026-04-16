@@ -40,6 +40,7 @@ NO explanation. NO markdown.`
 
     const rawText =
       data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    console.log("RAW GEMINI:", rawText);
 
     const jsonMatch = rawText.match(/\[.*\]/s);
     const books = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
