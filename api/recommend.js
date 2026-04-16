@@ -1,4 +1,7 @@
 export default async function handler(req, res) {
+
+  console.log("API KEY:", process.env.GEMINI_API_KEY); // 👈 ADD HERE
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -6,12 +9,8 @@ export default async function handler(req, res) {
   try {
     const { prompt } = req.body;
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ error: "API key missing" });
-    }
-
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -35,21 +34,11 @@ Return ONLY JSON like this:
       }
     );
 
-    // 🔥 Check if API failed
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Gemini API Error:", errorText);
-      return res.status(500).json({ error: "Gemini API failed" });
-    }
-
     const data = await response.json();
 
     const rawText =
       data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    console.log("RAW GEMINI:", rawText);
-
-    // 🔥 Extract JSON safely
     const jsonMatch = rawText.match(/\[.*\]/s);
     const books = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
 
