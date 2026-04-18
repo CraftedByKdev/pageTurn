@@ -209,3 +209,57 @@
 .stars { color: #ccc; font-size: 1rem; }
 .star.filled { color: #FFCC00; }
 .rating-text { font-size: 0.8rem; color: #777; font-weight: 400; }
+
+#splashScreen {
+    position: fixed;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(135deg, #4f46e5, #9333ea);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+.logo-text {
+    font-family:var(--font-heading);
+    font-style: italic; color: white; font-weight: 300; 
+    
+   
+    font-size: 42px;
+   
+    letter-spacing: 2px;
+    animation: fadeZoom 1.2s ease;
+}
+
+.logo-highlight {
+    font-family: var(--font-heading);
+    font-size: 42px;
+    color: var(--color-accent-gold);
+    font-weight: 700;
+    letter-spacing: 2px;
+    animation: fadeZoom 1.2s ease;
+}
+
+@keyframes fadeZoom {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.logo-text::after {
+    content: "📖";
+    margin-left: 10px;
+    animation: flip 1s infinite alternate;
+}
+
+@keyframes flip {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(180deg); }
+}
