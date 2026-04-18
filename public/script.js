@@ -39,7 +39,13 @@ function canCallAI() {
     localStorage.setItem("ai_usage", JSON.stringify(usage));
     return true;
 }
-
+window.addEventListener("load", () => {
+    setTimeout(() => {
+        const splash = document.getElementById("splashScreen");
+        splash.style.opacity = "0";
+        splash.style.visibility = "hidden";
+    }, 1500); // 2 sec
+});
 // ================== IMAGE SYSTEM ==================
 function getBookImage(title) {
     return `https://covers.openlibrary.org/b/title/${encodeURIComponent(title)}-L.jpg`;
