@@ -1,22 +1,16 @@
 export default async function handler(req, res) {
 
-  console.log("API KEY:", process.env.GEMINI_API_KEY);
-   
-  app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    next();
-});
+  // ✅ CORS HEADERS (IMPORTANT)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  app.options("*", (req, res) => {
-    res.sendStatus(200);
-});
+  // ✅ Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
-    if (req.method === "OPTIONS") {
-        return res.status(200).end();
-    }
-
+  // ✅ Allow only POST
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -55,11 +49,11 @@ Format:
     const rawText =
       data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-    console.log("RAW GEMINI:", rawText); // 🔥 DEBUG
+    console.log("RAW GEMINI:", rawText);
 
-    // 🔥 CLEAN JSON (stronger)
+    // ✅ CLEAN JSON
     const cleanText = rawText
-      .replace(/```json|```/g, "") // remove markdown
+      .replace(/```json|```/g, "")
       .trim();
 
     let books = [];
