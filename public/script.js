@@ -133,10 +133,10 @@ window.onload = () => {
 };
 
 // ================== SEARCH ==================
-searchBtn.onclick = handleSearch;
+searchBtn.onclick = () => handleCuratedSearch(searchInput.value);
 
 searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleSearch();
+    if (e.key === 'Enter') handleCuratedSearch();
 });
 // A unified function to handle all requests (Search, AI Box, and Genres)
 async function handleCuratedSearch(query) {
@@ -155,7 +155,7 @@ async function handleCuratedSearch(query) {
         
         // 3. PUT GOOGLE API AT LAST
         // Using 'true' for append ensures they go to the bottom
-        fetchBooks(query, true); 
+      
     } else {
         // Only if AI fails completely, show standard Google results
         fetchBooks(query, false);
@@ -163,43 +163,23 @@ async function handleCuratedSearch(query) {
 }
 
 // Update your event listeners to use this unified function
-searchBtn.onclick = () => handleCuratedSearch(searchInput.value);
-aiBtn.onclick = () => handleCuratedSearch(aiInput.value);
+
+
 
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('tag') || e.target.classList.contains('extra-genre')) {
+        e.stopPropagation();
         const genre = e.target.dataset.genre;
         handleCuratedSearch(`best ${genre} books`);
     }
 });
-async function handleSearch() {
-    const query = searchInput.value.trim();
-    if (!query) return;
-
-    dynamicHeading.textContent = `Finding recommendations...`;
-    // Clear the grid so Google results don't linger
-    bookGrid.innerHTML = `<p class="status-msg"></p>`;
-
-    // 1. Wait for Gemini FIRST
-    const aiBooks = await getAIRecommendations(query);
-   
-    if (aiBooks && aiBooks.length > 0) {
-        // AI Success: Render these first
-        renderCuratedBooks(aiBooks, `Recommendations for "${query}"`);
-        
-        // 2. ONLY THEN call Google Books as "More results" using append=true
-        fetchBooks(query, true); 
-    } else {
-        // AI Failed: Only then use Google as the main source
-        fetchBooks(query, false);
-    }
-}
 
 // ================== GENRE TAG ==================
 // ================== GENRE TAG ==================
 
 document.addEventListener('click', async (e) => {
     if (e.target.classList.contains('tag') || e.target.classList.contains('extra-genre')) {
+        e.stopPropagation();
         const genre = e.target.dataset.genre;
         if (!genre) return;
 
@@ -215,7 +195,7 @@ document.addEventListener('click', async (e) => {
             renderCuratedBooks(aiBooks, `Top Picks: ${genre}`);
             
             // Append Google results at the end
-            fetchBooks(`subject:${genre}`, true); 
+           
         } else {
             // If AI fails, Google API is called
             fetchBooks(`subject:${genre}`, false);
@@ -226,7 +206,7 @@ document.addEventListener('click', async (e) => {
 
 
 // ================== AI INPUT ==================
-aiBtn.onclick = handleAI;
+aiBtn.onclick = () => handleCuratedSearch(aiInput.value);
 
 aiInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') handleAI();
@@ -550,7 +530,7 @@ window.onclick = (e) => {
 
 async function getAIRecommendations(prompt) {
     try {
-        const res = await fetch("/api/recommend", {  // ✅ CHANGE HERE
+        const res = await fetch("https://page-turn-is5z.vercel.app/api/recommend", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ prompt })
@@ -559,10 +539,9 @@ async function getAIRecommendations(prompt) {
         if (!res.ok) throw new Error("Server response not OK");
 
         const data = await res.json();
-        console.log("AI Results Received:", data);
+        console.log("AI Results Received:", data); // Check your browser console!
         
         return Array.isArray(data) ? data : null;
-
     } catch (err) {
         console.error("AI Fetch Failed:", err);
         return null;
