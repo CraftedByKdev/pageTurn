@@ -166,13 +166,7 @@ async function handleCuratedSearch(query) {
 
 
 
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tag') || e.target.classList.contains('extra-genre')) {
-        e.stopPropagation();
-        const genre = e.target.dataset.genre;
-        handleCuratedSearch(`best ${genre} books`);
-    }
-});
+
 
 // ================== GENRE TAG ==================
 // ================== GENRE TAG ==================
