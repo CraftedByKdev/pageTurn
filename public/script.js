@@ -3,6 +3,7 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const bookGrid = document.getElementById('bookGrid');
 const dynamicHeading = document.getElementById('dynamicHeading');
+
 const modal = document.getElementById('bookModal');
 const modalBody = document.getElementById('modalBody');
 const closeBtn = document.querySelector('.close-modal');
@@ -11,6 +12,33 @@ const aiInput = document.getElementById('aiInput');
 const aiBtn = document.getElementById('aiBtn');
 
 const AMAZON_AFFILIATE_TAG = "pageturn-21";
+
+
+let debounceTimer;
+
+searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+
+    debounceTimer = setTimeout(() => {
+        handleCuratedSearch(searchInput.value);
+    }, 300); // wait 300ms
+});
+
+function canCallAI() {
+    const today = new Date().toDateString();
+    const usage = JSON.parse(localStorage.getItem("ai_usage") || "{}");
+
+    if (usage.date !== today) {
+        localStorage.setItem("ai_usage", JSON.stringify({ date: today, count: 1 }));
+        return true;
+    }
+
+    if (usage.count > 20) return false; // limit
+
+    usage.count++;
+    localStorage.setItem("ai_usage", JSON.stringify(usage));
+    return true;
+}
 
 // ================== IMAGE SYSTEM ==================
 function getBookImage(title) {
@@ -142,22 +170,30 @@ searchInput.addEventListener('keypress', (e) => {
 async function handleCuratedSearch(query) {
     if (!query) return;
 
-    // 1. Initial UI State
     dynamicHeading.textContent = `Curating results for "${query}"`;
     bookGrid.innerHTML = `<p class="status-msg"></p>`;
 
-    // 2. GET GEMINI RESULTS FIRST
+    // 🔥 STEP 1: Try local intelligence FIRST
+    const localBooks = getAILevelBooks(query);
+
+    if (localBooks) {
+        renderCuratedBooks(localBooks, `Top Picks: ${query}`);
+        return; // ❌ STOP — no API call
+    }
+    
+    if (!canCallAI()) {
+        fetchBooks(query, false);
+        return; // ✅ now valid
+    }
+    // 🔥 STEP 2: Only then call AI
     const aiBooks = await getAIRecommendations(query);
-   
+    
     if (aiBooks && aiBooks.length > 0) {
-        // Render 10 AI results (This clears the "thinking" message)
-        renderCuratedBooks(aiBooks, `Top Picks: ${query}`);
-        
-        // 3. PUT GOOGLE API AT LAST
-        // Using 'true' for append ensures they go to the bottom
-      
+     
+    
+
+        renderCuratedBooks(aiBooks, `Picks for "${query}"`);
     } else {
-        // Only if AI fails completely, show standard Google results
         fetchBooks(query, false);
     }
 }
@@ -171,7 +207,7 @@ async function handleCuratedSearch(query) {
 // ================== GENRE TAG ==================
 // ================== GENRE TAG ==================
 
-document.addEventListener('click', async (e) => {
+document.addEventListener('click', async (e,query) => {
     if (e.target.classList.contains('tag') || e.target.classList.contains('extra-genre')) {
         e.stopPropagation();
         const genre = e.target.dataset.genre;
@@ -182,11 +218,15 @@ document.addEventListener('click', async (e) => {
 
         // Trigger Gemini
         const aiBooks = await getAIRecommendations(`best ${genre} books`);
-
+       
         if (aiBooks && aiBooks.length > 0) {
             // When rendering Gemini results for genres, it uses renderCuratedBooks
             // Ensure renderCuratedBooks (which we fixed earlier) is being called here
-            renderCuratedBooks(aiBooks, `Top Picks: ${genre}`);
+            
+            let ranked = rankBooks(aiBooks, genre);
+            ranked = diversify(ranked);
+
+            renderCuratedBooks(ranked, `Top Picks: ${genre}`);
             
             // Append Google results at the end
            
@@ -213,10 +253,12 @@ async function handleAI() {
     bookGrid.innerHTML = `<p class="status-msg"></p>`;
 
     const aiBooks = await getAIRecommendations(text);
-
+   
     if (aiBooks && aiBooks.length > 0) {
         // This ensures ONLY AI results are shown
-        renderCuratedBooks(aiBooks, `Picks for "${text}"`);
+        let ranked = rankBooks(aiBooks, text);
+        ranked = diversify(ranked);
+        renderCuratedBooks(ranked, `Picks for "${text}"`);
     } else {
         bookGrid.innerHTML = `<p class="status-msg">Couldn't find specific matches. Try searching by genre!</p>`;
     }
@@ -348,8 +390,20 @@ function getAILevelBooks(query) {
     return null;
 }
 // ================== FETCH GOOGLE API ==================
+
+function getGoogleCacheKey(query) {
+    return `google_cache_${query.toLowerCase()}`;
+}
+
 async function fetchBooks(query, append = false) {
     console.log(query);
+     const key = getGoogleCacheKey(query);
+
+    const cached = JSON.parse(localStorage.getItem(key));
+    if (cached && (Date.now() - cached.time < 86400000)) {
+        renderBooks(cached.data);
+        return;
+    }
     try {
         const res = await fetch(
             `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=20`
@@ -358,6 +412,12 @@ async function fetchBooks(query, append = false) {
         const data = await res.json();
 
         if (!data.items) return;
+
+            localStorage.setItem(key, JSON.stringify({
+            data: data.items,
+            time: Date.now()
+        }));
+
 
        const books = data.items
     .filter(b => {
@@ -454,8 +514,10 @@ function renderCuratedBooks(books, title) {
         else if (index === 1) badgeHTML = `<span class="badge badge-trending">Trending</span>`;
 
         const rating = b.rating || (Math.random() * (4.9 - 4.3) + 4.3).toFixed(1);
-        const reviews = b.reviews || Math.floor(Math.random() * 2000) + 150;
-        
+        let reviews_new = b.reviews || Math.floor(Math.random() * 2000) + 150;
+        if(reviews_new > 20000){
+           reviews_new =  Math.floor(Math.random() * 2000)+ 150;
+        }
         let starsHTML = '';
         for (let i = 1; i <= 5; i++) {
             starsHTML += `<span class="star ${i <= Math.round(rating) ? 'filled' : ''}">★</span>`;
@@ -473,7 +535,7 @@ function renderCuratedBooks(books, title) {
                 <p class="author-name">${b.author}</p>
                 <div class="rating-container">
                     <div class="stars">${starsHTML}</div>
-                    <span class="rating-text">${rating} (${reviews.toLocaleString()} reviews)</span>
+                    <span class="rating-text">${rating} (${reviews_new.toLocaleString()} reviews)</span>
                 </div>
                 <p class="book-desc">${b.desc || "Click to read more about this selection."}</p>
                 <div class="card-footer">
@@ -522,7 +584,20 @@ window.onclick = (e) => {
     if (e.target === modal) modal.style.display = "none";
 };
 
+function getCacheKey(query) {
+    return `ai_cache_${query.toLowerCase()}`;
+}
+
 async function getAIRecommendations(prompt) {
+    const key = getCacheKey(prompt);
+
+    // 🔥 STEP 1: Check cache
+    const cached = JSON.parse(localStorage.getItem(key));
+
+if (cached && (Date.now() - cached.time < 86400000)) {
+    return cached.data;
+}
+
     try {
         const res = await fetch("https://page-turn-is5z.vercel.app/api/recommend", {
             method: "POST",
@@ -530,12 +605,18 @@ async function getAIRecommendations(prompt) {
             body: JSON.stringify({ prompt })
         });
 
-        if (!res.ok) throw new Error("Server response not OK");
-
         const data = await res.json();
-        console.log("AI Results Received:", data); // Check your browser console!
-        
-        return Array.isArray(data) ? data : null;
+
+        if (Array.isArray(data)) {
+            // 🔥 STEP 2: Save to cache
+           localStorage.setItem(key, JSON.stringify({
+    data,
+    time: Date.now()
+}));
+        }
+
+        return data;
+
     } catch (err) {
         console.error("AI Fetch Failed:", err);
         return null;
@@ -580,3 +661,53 @@ function improveQuery(query) {
     return query ;
 }
 // ================== GENRE TAG FIX ==================
+function rankBooks(books, query) {
+    const q = query.toLowerCase();
+
+    return books
+        .map(book => {
+            let score = 0;
+
+            // 1. Rating boost (strong signal)
+            score += (book.rating || 4) * 2;
+
+            // 2. Reviews weight (log scale → prevents domination)
+            const reviews = book.reviews || 100;
+            score += Math.log10(reviews) * 2;
+
+            // 3. Query relevance (VERY important)
+            const text = (book.title + " " + book.desc).toLowerCase();
+            if (text.includes(q)) score += 5;
+
+            // 4. Freshness bonus (optional)
+            if (book.year && book.year > 2015) score += 1;
+
+            // 5. Penalize generic titles
+            if (book.title.length < 5) score -= 1;
+
+            if (userLikedSimilar(book)) score += 3;
+
+            return { ...book, query };
+        })
+        .sort((a, b) => b.score - a.score);
+}
+function diversify(sortedBooks) {
+    const seenAuthors = new Set();
+
+    return sortedBooks.filter(book => {
+        if (seenAuthors.has(book.author)) return false;
+        seenAuthors.add(book.author);
+        return true;
+    });
+}
+
+function saveUserTaste(book) {
+    let taste = JSON.parse(localStorage.getItem("taste") || "[]");
+    taste.push(book.title);
+    localStorage.setItem("taste", JSON.stringify(taste));
+}
+
+function userLikedSimilar(book) {
+    const taste = JSON.parse(localStorage.getItem("taste") || "[]");
+    return taste.some(t => book.title.toLowerCase().includes(t.toLowerCase()));
+}
